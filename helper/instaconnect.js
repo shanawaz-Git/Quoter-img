@@ -1,7 +1,8 @@
 "use Strict";
 
 require("dotenv").config();
-const { IgApiClient } = require("instagram-private-api");
+// const { IgApiClient } = require("instagram-private-api");
+const quoteBuffer = require("../schemas/quoteBufferSchema");
 const axios = require("axios");
 const { quotes } = require("./quotesAPI");
 const { randomHashtag } = require("./hashtags");
@@ -29,7 +30,8 @@ exports.igImageUpload = async () => {
       .resize(800) // Resize the image to a maximum width of 800 pixels
       .jpeg({ quality: 80 }) // Convert the image to JPEG format with a quality of 80%
       .toBuffer();
-    await this.instaClient(imageBuffer, captionWithHashTag);
+
+    var res = await this.instaClientBufferToDB(imageBuffer, captionWithHashTag);
     // const outputDir = "./output";
     // const outputFileName = "output.jpg";
     // const outputPath = `${outputDir}/${outputFileName}`;
@@ -42,11 +44,11 @@ exports.igImageUpload = async () => {
     //   if (err) throw err;
     //   console.log("The image was saved!");
     // });
-    res = {
-      code: 200,
-      status: "Success",
-      message: "Publishing initialized",
-    };
+    // res = {
+    //   code: 200,
+    //   status: "Success",
+    //   message: "Publishing initialized",
+    // };
   } catch (error) {
     res = {
       code: 403,
@@ -57,20 +59,28 @@ exports.igImageUpload = async () => {
   return res;
 };
 
-exports.instaClient = (imageBuffer, captionWithHashTag) => {
-  console.log("invoked instaclient");
-  res = {};
-  const ig = new IgApiClient();
-  ig.state.generateDevice(process.env.UNAME);
-  ig.account.login(process.env.UNAME, process.env.PASSWORD).then(() => {
-    ig.publish
-      .photo({
-        file: imageBuffer,
-        caption: captionWithHashTag,
-      })
-      .then((res) => {
-        console.log("after publish to IG --> status:" + res.status);
-      });
+exports.instaClientBufferToDB = async (imageBuffer, captionWithHashTag) => {
+  const quoteAndImgBuffer = new quoteBuffer({
+    caption: captionWithHashTag,
+    quoteBuffer: imageBuffer,
   });
-  console.log("after ig publish");
+  await quoteAndImgBuffer
+    .save()
+    .then(async () => {
+      res = {
+        code: 200,
+        status: "Success",
+        message: "Success!",
+      };
+      // await this.sendEmail(email);
+    })
+    .catch((e) => {
+      res = {
+        code: 201,
+        status: "Failure",
+        message:
+          "Oh oh!! we are facing issue with database. Please try again after sometime..\nSorry for the inconvenience!",
+      };
+    });
+  return res;
 };

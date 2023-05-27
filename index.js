@@ -7,9 +7,10 @@ require("dotenv").config();
 const postRoute = require("./routes/postRoute");
 const getRoute = require("./routes/getRoute");
 //----
+require("./db/db-config1");
 //----
 const app = express();
-const PORT = process.env.PORT || 5009;
+const PORT = process.env.PORT || 5010;
 //----
 app.use(cors());
 app.use(bodyParser.json());
